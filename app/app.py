@@ -130,7 +130,7 @@ def price_residual_chart() -> go.Figure:
                              name="Demand (GW)", mode="lines", yaxis="y2",
                              line=dict(color="#888780", width=1, dash="dash")))
     fig.update_layout(height=380, margin=dict(l=80, r=40, t=50, b=70),
-                      yaxis=dict(title="EUR/MWh"),
+                      yaxis=dict(title="EUR/MWh", range=[0, max(prices) * 1.10]),
                       yaxis2=dict(title="GW", overlaying="y", side="right", showgrid=False),
                       legend=dict(orientation="h", y=1.12), hovermode="x unified")
     return fig
