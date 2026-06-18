@@ -1,0 +1,27 @@
+# Battery storage classes. Each is defined by its power, its energy and its
+# round-trip efficiency. The duration (energy / power) is what matters most for
+# arbitrage: a 4-hour battery can ride the full midday-to-evening swing, a
+# 1-hour battery only the sharpest spike.
+#
+# Fields:
+# - power_mw: maximum charge/discharge power (MW).
+# - energy_mwh: usable energy capacity (MWh).
+# - round_trip_pct: AC-to-AC round-trip efficiency (%). Split evenly into a
+#   one-way charge and discharge efficiency (sqrt) in the optimiser.
+#
+# ILLUSTRATIVE. Editable in-app.
+
+grid_1h:
+  power_mw: 200
+  energy_mwh: 200
+  round_trip_pct: 88
+
+grid_2h:
+  power_mw: 200
+  energy_mwh: 400
+  round_trip_pct: 86
+
+grid_4h:
+  power_mw: 200
+  energy_mwh: 800
+  round_trip_pct: 85

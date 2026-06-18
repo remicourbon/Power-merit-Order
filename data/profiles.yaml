@@ -1,0 +1,46 @@
+# Hourly profiles, 24 values each (hour 0..23). Flat mapping; every profile
+# declares its `kind`, and a system slots each one into the matching role.
+#
+# Semantics differ by kind (deliberate, documented):
+# - kind: demand -> values are FRACTIONS OF PEAK in [0, 1]; scaled by the
+#   system's peak_demand_gw.
+# - kind: solar / wind -> values are CAPACITY FACTORS in [0, 1]; multiplied by
+#   the technology's installed capacity to get available MW that hour.
+#
+# Deterministic, hand-drawn shapes (so the tests are exact). ILLUSTRATIVE.
+
+double_peak:
+  kind: demand
+  values: [0.62, 0.59, 0.58, 0.58, 0.60, 0.65, 0.74, 0.85, 0.88, 0.85,
+           0.82, 0.80, 0.79, 0.78, 0.78, 0.81, 0.87, 0.95, 1.00, 0.99,
+           0.93, 0.84, 0.74, 0.66]
+
+evening_peak:
+  kind: demand
+  values: [0.60, 0.57, 0.56, 0.56, 0.58, 0.62, 0.70, 0.78, 0.82, 0.83,
+           0.83, 0.83, 0.84, 0.84, 0.85, 0.88, 0.93, 0.98, 1.00, 0.98,
+           0.92, 0.83, 0.72, 0.64]
+
+solar_temperate:
+  kind: solar
+  values: [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.05, 0.18, 0.35, 0.52,
+           0.68, 0.78, 0.82, 0.80, 0.72, 0.58, 0.40, 0.20, 0.05, 0.00,
+           0.00, 0.00, 0.00, 0.00]
+
+solar_iberian:
+  kind: solar
+  values: [0.00, 0.00, 0.00, 0.00, 0.00, 0.00, 0.10, 0.28, 0.48, 0.66,
+           0.80, 0.90, 0.94, 0.92, 0.84, 0.70, 0.52, 0.30, 0.10, 0.00,
+           0.00, 0.00, 0.00, 0.00]
+
+wind_steady:
+  kind: wind
+  values: [0.34, 0.36, 0.37, 0.38, 0.37, 0.35, 0.33, 0.30, 0.28, 0.27,
+           0.26, 0.26, 0.27, 0.28, 0.29, 0.30, 0.31, 0.32, 0.33, 0.34,
+           0.35, 0.35, 0.35, 0.34]
+
+wind_night_high:
+  kind: wind
+  values: [0.45, 0.48, 0.50, 0.50, 0.48, 0.44, 0.38, 0.32, 0.27, 0.24,
+           0.22, 0.21, 0.21, 0.22, 0.24, 0.27, 0.30, 0.33, 0.36, 0.39,
+           0.42, 0.44, 0.45, 0.45]

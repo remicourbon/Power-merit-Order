@@ -1,0 +1,60 @@
+# Generation technologies. A LIBRARY of templates: a system (systems.yaml)
+# selects a subset of these and assigns each one a capacity.
+#
+# Fields:
+# - technology: free label, also drives the colour in the app.
+# - efficiency: electrical efficiency eta (MWh_e / MWh_th). For zero-fuel
+#   technologies (solar, wind) eta = 1.0 -- it is irrelevant since the fuel
+#   cost is zero, but keeps the SRMC formula uniform across the fleet.
+# - variable_om: variable O&M, EUR / MWh_e.
+# - fuel: key into fuels.yaml.
+# - availability: how usable capacity behaves hour to hour.
+#     'firm'  -> full nameplate every hour (thermal, nuclear)
+#     'solar' -> scaled by the system's solar capacity-factor profile
+#     'wind'  -> scaled by the system's wind capacity-factor profile
+#
+# ILLUSTRATIVE engineering values. Replace with sourced data before relying on
+# outputs. SRMCs at default prices (CO2 75 EUR/t): nuclear ~7, solar/wind 0,
+# gas CCGT ~93, coal ~97, gas OCGT ~135 EUR/MWh.
+
+nuclear:
+  technology: nuclear
+  efficiency: 0.33
+  variable_om: 1.0
+  fuel: uranium
+  availability: firm
+
+coal:
+  technology: coal
+  efficiency: 0.40
+  variable_om: 3.0
+  fuel: hard_coal
+  availability: firm
+
+gas_ccgt:
+  technology: gas_ccgt
+  efficiency: 0.55
+  variable_om: 2.0
+  fuel: natural_gas
+  availability: firm
+
+gas_ocgt:
+  technology: gas_ocgt
+  efficiency: 0.38
+  variable_om: 3.0
+  fuel: natural_gas
+  availability: firm
+
+solar:
+  technology: solar
+  efficiency: 1.0
+  variable_om: 0.0
+  fuel: none
+  availability: solar
+
+wind:
+  technology: wind
+  efficiency: 1.0
+  variable_om: 0.0
+  fuel: none
+  availability: wind

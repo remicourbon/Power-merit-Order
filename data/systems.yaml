@@ -1,0 +1,70 @@
+# Power systems. Each is a stylized national-scale fleet: a set of technologies
+# (keys -> units.yaml) with installed capacities, a peak demand, and the three
+# profiles (keys -> profiles.yaml) that shape demand, solar and wind.
+#
+# capacities_gw: installed capacity in GW per technology. A technology absent
+# from the map is simply not in that system. Dispatchable capacity (everything
+# but solar/wind) is sized to cover peak demand, so renewables push prices DOWN
+# rather than being structurally required.
+#
+# sandbox: true -> the fleet is fully editable in the app (capacities and peak
+# demand set by sliders). The YAML values are only the starting point.
+#
+# ILLUSTRATIVE archetypes, not calibrated to any real grid.
+
+continental:
+  name: "Continental — nuclear-heavy"
+  demand_profile: double_peak
+  solar_profile: solar_temperate
+  wind_profile: wind_steady
+  peak_demand_gw: 60
+  capacities_gw:
+    nuclear: 46
+    gas_ccgt: 14
+    gas_ocgt: 8
+    coal: 5
+    solar: 12
+    wind: 14
+
+iberian:
+  name: "Iberian — solar-heavy"
+  demand_profile: evening_peak
+  solar_profile: solar_iberian
+  wind_profile: wind_steady
+  peak_demand_gw: 42
+  capacities_gw:
+    nuclear: 6
+    gas_ccgt: 24
+    gas_ocgt: 10
+    coal: 2
+    solar: 34
+    wind: 8
+
+gas_and_wind:
+  name: "Gas & wind — thermal-led"
+  demand_profile: evening_peak
+  solar_profile: solar_temperate
+  wind_profile: wind_night_high
+  peak_demand_gw: 70
+  capacities_gw:
+    nuclear: 5
+    gas_ccgt: 45
+    gas_ocgt: 18
+    coal: 4
+    solar: 12
+    wind: 30
+
+sandbox:
+  name: "Sandbox — editable fleet"
+  sandbox: true
+  demand_profile: double_peak
+  solar_profile: solar_temperate
+  wind_profile: wind_steady
+  peak_demand_gw: 40
+  capacities_gw:
+    nuclear: 15
+    gas_ccgt: 12
+    gas_ocgt: 6
+    coal: 7
+    solar: 18
+    wind: 12

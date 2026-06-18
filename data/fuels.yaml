@@ -1,0 +1,32 @@
+# Fuels. Each fuel carries a default price and an emission factor.
+#
+# Conventions:
+# - price_eur_mwh_th: variable fuel cost per MWh of THERMAL energy (fuel input).
+#   Editable in-app (the scenario sliders override these). ILLUSTRATIVE values,
+#   loosely European.
+# - emission_factor_tco2_mwh_th: tonnes of CO2 released per MWh of thermal fuel
+#   burned. A PHYSICAL property of the fuel, so it is NOT a slider -- only the
+#   CO2 price (EUR/tCO2) is.
+# - Nuclear fuel is genuinely cheap per unit of heat (~2 EUR/MWh_th); combined
+#   with the unit's thermal efficiency this gives the familiar ~7 EUR/MWh_e
+#   marginal cost. 'none' is the zero-fuel placeholder used by renewables.
+#
+# The short-run marginal cost (see core/marginal_cost.py) is:
+#   SRMC = (price_eur_mwh_th + emission_factor * co2_price) / efficiency + VOM
+# where efficiency and VOM belong to the UNIT, not the fuel.
+
+natural_gas:
+  price_eur_mwh_th: 35.0
+  emission_factor_tco2_mwh_th: 0.20
+
+hard_coal:
+  price_eur_mwh_th: 12.0
+  emission_factor_tco2_mwh_th: 0.34
+
+uranium:
+  price_eur_mwh_th: 2.0
+  emission_factor_tco2_mwh_th: 0.0
+
+none:
+  price_eur_mwh_th: 0.0
+  emission_factor_tco2_mwh_th: 0.0
