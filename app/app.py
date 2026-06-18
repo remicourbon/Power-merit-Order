@@ -129,7 +129,7 @@ def price_residual_chart() -> go.Figure:
     fig.add_trace(go.Scatter(x=hours, y=[h.demand_mw/1000 for h in curve],
                              name="Demand (GW)", mode="lines", yaxis="y2",
                              line=dict(color="#888780", width=1, dash="dash")))
-    fig.update_layout(height=380, margin=dict(l=10, r=10, t=30, b=10),
+    fig.update_layout(height=380, margin=dict(l=80, r=40, t=50, b=70),
                       yaxis=dict(title="EUR/MWh"),
                       yaxis2=dict(title="GW", overlaying="y", side="right", showgrid=False),
                       legend=dict(orientation="h", y=1.12), hovermode="x unified")
@@ -158,15 +158,71 @@ def merit_order_chart(hour: int):
         fig.add_annotation(x=x + cap / 2, y=srmc, text=TECH_LABEL[tech],
                            showarrow=False, yshift=8, font=dict(size=10))
         x += cap
-    fig.add_vline(x=demand_mw/1000, line=dict(color="#A32D2D", width=2, dash="dash"),
-                  annotation_text=f"demand {demand_mw/1000:.1f} GW", annotation_position="top")
+
+    fig.add_vline(x=demand_mw / 1000, line=dict(color="#A32D2D", width=2, dash="dash"),
+                  annotation_text=f"demand {demand_mw/1000:.1f} GW",
+                  annotation_position="top")
     fig.add_hline(y=res.clearing_price, line=dict(color="#A32D2D", width=1, dash="dot"),
-                  annotation_text=f"price {res.clearing_price:.1f}", annotation_position="right")
-    fig.update_layout(height=420, margin=dict(l=10, r=10, t=20, b=10),
+                  annotation_text=f"price {res.clearing_price:.1f}",
+                  annotation_position="right")
+
+    y_max = max(
+        [srmc for tech, _u, srmc in merit_order(units, fuels, co2)
+         if avail.get(tech, 0.0) > 0],
+        default=1.0
+    )
+
+    fig.update_layout(height=420, margin=dict(l=80, r=40, t=40, b=70),
                       xaxis_title="Cumulative available capacity (GW)",
-                      yaxis_title="SRMC (EUR/MWh)", showlegend=False)
+                      yaxis_title="SRMC (EUR/MWh)", showlegend=False,
+                      xaxis=dict(range=[0, x]),
+                      yaxis=dict(range=[0, y_max * 1.10]))
     return fig, res
 
+
+def merit_order_table(hour: int, res) -> pd.DataFrame:
+    """Build the dispatch economics table for the selected hour.
+    Important distinction:
+    - installed capacity = nameplate capacity in the system, e.g. 34 GW solar
+    - available capacity = installed capacity adjusted by hourly availability,
+      e.g. solar capacity factor at 18h
+    - dispatched = what the market actually calls to meet demand
+    For renewables, available capacity can be much lower than installed capacity.
+    So solar can be 100% used relative to available capacity, while only 10% used
+    relative to installed capacity.
+    """
+    s = active_system
+    units = {t: ds.units[t] for t in s.capacities_gw}
+    fuels = result.fuels
+    solar_cf = ds.profile(s.solar_profile, "solar").values[hour]
+    wind_cf = ds.profile(s.wind_profile, "wind").values[hour]
+    avail = available_mw(s, units, solar_cf, wind_cf)
+    rows = []
+    cumulative_dispatch = 0.0
+    for tech, _u, srmc in merit_order(units, fuels, co2):
+        installed = s.capacities_gw.get(tech, 0.0) * 1000.0
+        available = avail.get(tech, 0.0)
+        dispatched = res.dispatch.get(tech, 0.0)
+        availability_factor = available / installed if installed > 0 else 0.0
+        dispatch_of_installed = dispatched / installed if installed > 0 else 0.0
+        dispatch_of_available = dispatched / available if available > 0 else 0.0
+        market_revenue = dispatched * res.clearing_price
+        variable_cost = dispatched * srmc
+        inframarginal_gain = market_revenue - variable_cost
+        cumulative_dispatch += dispatched * 1
+        rows.append({
+            "Technology": TECH_LABEL.get(tech, tech),
+            "SRMC (€/MWh)": round(srmc, 1),
+            "Installed capacity (GW)": round(installed / 1000, 2),
+            "Available at hour (GW)": round(available / 1000, 2),
+            "Availability factor (%)": round(availability_factor * 100, 1),
+            "Dispatched (GW)": round(dispatched / 1000, 2),
+            "Cumulative dispatched (GW)": round(cumulative_dispatch / 1000, 2),
+            "Market revenue (k€/h)": round(market_revenue / 1000, 1),
+            "Variable cost (k€/h)": round(variable_cost / 1000, 1),
+            "Inframarginal gain (k€/h)": round(inframarginal_gain / 1000, 1)
+        })
+    return pd.DataFrame(rows)
 
 def battery_schedule_chart() -> go.Figure:
     hours = list(range(len(prices)))
@@ -179,7 +235,7 @@ def battery_schedule_chart() -> go.Figure:
     fig.add_trace(go.Scatter(x=hours, y=prices, name="Price (EUR/MWh)",
                              mode="lines+markers", line=dict(color="#A32D2D", width=3)),
                   secondary_y=True)
-    fig.update_layout(height=400, barmode="relative", margin=dict(l=10, r=10, t=30, b=10),
+    fig.update_layout(height=400, barmode="relative", margin=dict(l=80, r=40, t=50, b=70),
                       legend=dict(orientation="h", y=1.12), hovermode="x unified")
     fig.update_yaxes(title_text="charge (-) / discharge (+) MW", secondary_y=False)
     fig.update_yaxes(title_text="EUR/MWh", secondary_y=True, showgrid=False)
@@ -199,7 +255,7 @@ def soc_chart() -> go.Figure:
     cap = battery_override.energy_mwh if battery_override else base_bat.energy_mwh
     fig.add_hline(y=cap, line=dict(color="#888780", dash="dash"),
                   annotation_text="capacity")
-    fig.update_layout(height=320, margin=dict(l=10, r=10, t=20, b=10),
+    fig.update_layout(height=320, margin=dict(l=80, r=40, t=40, b=70),
                       legend=dict(orientation="h", y=1.15), hovermode="x unified")
     fig.update_yaxes(title_text="SOC (MWh)", secondary_y=False)
     fig.update_yaxes(title_text="EUR/MWh", secondary_y=True, showgrid=False)
@@ -231,10 +287,17 @@ if page == "Price curve":
     hour = st.slider("Hour of day", 0, 23, 18)
     fig, res = merit_order_chart(hour)
     st.plotly_chart(fig, use_container_width=True)
+
     mu = TECH_LABEL.get(res.marginal_unit, "lost load (scarcity)")
     st.info(f"Hour {hour}: marginal unit **{mu}**, clearing price "
             f"**{res.clearing_price:.1f} €/MWh**, inframarginal rent "
             f"**{res.inframarginal_rent/1000:.0f} k€/h**.")
+
+    st.subheader("Dispatch economics by technology")
+    st.caption("For the selected hour, this table follows the merit order from "
+               "the lowest SRMC to the highest. Inframarginal gain = "
+               "(market price - SRMC) × dispatched energy.")
+    st.dataframe(merit_order_table(hour, res), use_container_width=True, hide_index=True)
 
     units = {t: ds.units[t] for t in active_system.capacities_gw}
     if "gas_ccgt" in units and "coal" in units:
@@ -257,6 +320,7 @@ elif page == "Battery behaviour":
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Arbitrage profit", f"{b.profit_eur:,.0f} €/day")
     c2.metric("Equivalent cycles", f"{b.equivalent_cycles:.2f}")
+
     ratio = (b.avg_sell_price / b.avg_buy_price) if (b.avg_buy_price and b.avg_sell_price) else None
     c3.metric("Achieved price ratio", f"{ratio:.2f}×" if ratio else "—",
               help="Average sell price / average buy price.")
@@ -268,7 +332,9 @@ elif page == "Battery behaviour":
     else:
         if ratio is not None and ratio < b.breakeven_spread_ratio:
             st.warning("Achieved ratio is below break-even — round-trip losses eat the spread.")
+
         st.plotly_chart(battery_schedule_chart(), use_container_width=True)
+
         st.subheader("State of charge and the value of stored energy")
         st.caption("The dotted line is the shadow price of the storage balance: "
                    "the marginal value of one more MWh in the battery each hour — "
@@ -327,9 +393,9 @@ elif page == "Reference data":
         fig = go.Figure()
         for k, p in ds.profiles.items():
             scale = 100 if p.kind != "demand" else 100
-            fig.add_trace(go.Scatter(x=list(range(24)), y=[v*scale for v in p.values],
+            fig.add_trace(go.Scatter(x=list(range(24)), y=[v * scale for v in p.values],
                                      mode="lines", name=f"{k} ({p.kind})"))
-        fig.update_layout(height=380, margin=dict(l=10, r=10, t=30, b=10),
+        fig.update_layout(height=380, margin=dict(l=80, r=40, t=50, b=70),
                           yaxis_title="% (fraction of peak / capacity factor)",
                           xaxis_title="Hour", legend=dict(orientation="h", y=-0.2))
         st.plotly_chart(fig, use_container_width=True)
@@ -356,3 +422,4 @@ elif page == "Reference data":
             "- **All inputs are stylized, not real data.** The natural v2 is to swap "
             "in real ENTSO-E capacities, load and renewable generation and calibrate "
             "P(t) against day-ahead prices — showing the gap, not hiding it.")
+        

@@ -102,13 +102,22 @@ def optimise_battery(prices: Sequence[float], power_mw: float, energy_mwh: float
     # --- constraints (named, so duals are addressable) ---------------------
     for t in range(T):
         prev = soc_init if t == 0 else soc[t - 1]
-        prob += (soc[t] == prev + eta * c[t] * dt - d[t] * (1.0 / eta) * dt, f"soc_{t}")
+
+        # PuLP accepts multiplication by a float more reliably than division
+        # of an LpVariable by a float. This is mathematically identical to:
+        # soc[t] == prev + eta * c[t] * dt - (d[t] / eta) * dt
+        prob += (
+            soc[t] == prev + eta * c[t] * dt - d[t] * (1.0 / eta) * dt,
+            f"soc_{t}"
+        )
+
     if cyclic:
         prob += (soc[T - 1] == soc_init, "cyclic")
 
     # --- solve --------------------------------------------------------------
     prob.solve(pulp.PULP_CBC_CMD(msg=0))
     status = pulp.LpStatus[prob.status]
+
     if status != "Optimal":
         empty = tuple([0.0] * T)
         return BatteryResult(status, empty, empty, empty, empty, 0.0, 0.0,
@@ -127,7 +136,9 @@ def optimise_battery(prices: Sequence[float], power_mw: float, energy_mwh: float
 
     sell_energy = sum(discharge[t] * dt for t in range(T))
     buy_energy = sum(charge[t] * dt for t in range(T))
+
     cycles = sell_energy / energy_mwh
+
     avg_buy = (sum(prices[t] * charge[t] * dt for t in range(T)) / buy_energy
                if buy_energy > 1e-9 else None)
     avg_sell = (sum(prices[t] * discharge[t] * dt for t in range(T)) / sell_energy
